@@ -1,0 +1,23 @@
+Trello Note command line tool design
+
+packaged nicely
+
+tu extension cords -m "I priced them on Amazon vs down the streed - I think the extra 2 days we'll have them (we need them now) is worth it" -d
+
+allow any number of args for -m and card name, so these doesn't need quotes
+awesome tab completion on card name
+if card name not specified, get it in custom prompt
+
+Maybe have a command line interface so it closes nicely, so tab completion doesn't spew all over your bash session
+
+-use editor or -m for message
+  figure out what editor to use with VISUAL or EDITOR
+  maybe read .gitconfig options for people who don't set VISUAL or EDITOR
+-flag for 'move to bottom of list', because that can means it's been dealt with
+-pretty print of trello cards and date they've been edited, ideally including ability to view comments
+-list all cards you're subcribed to
+-list all cards
+
+locally store cached names of cards with ids for quick file completion
+
+nice display of information in description of card, possibly with links
