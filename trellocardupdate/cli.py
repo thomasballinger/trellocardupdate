@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-#TODO build a bash
 #TODO write bash completion scripts - matching is already there,
 #the work is just figuring out the syntax again to 'complete'
 #TODO reorganize this junk
@@ -53,7 +52,8 @@ def suggestions(s, possibilities):
 
 def print_card_completions(s):
     m = suggestions(unicode(s), [n for n, _id in cache.cards])
-    print m
+    for x in m:
+        print x
 
 def get_card_id_and_name(s):
     print 'looking for card id for', s
