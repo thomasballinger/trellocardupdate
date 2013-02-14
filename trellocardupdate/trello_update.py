@@ -33,10 +33,19 @@ def get_user_token():
         generate_token()
 
 def test_token():
-# doesn't actually test token yet, trolly is too lazy
     token = get_user_token()
     client = Client(APP_KEY, token)
-    print client
+    try:
+        b = Board(client, user.board_id)
+        print b.getBoardInformation()
+        return True
+    except trolly.ResourceUnavailable:
+        print 'bad board id'
+        return False
+    except trolly.Unauthorised:
+        print 'bad permissions (refresh token)'
+        return False
+
 
 def set_board():
     token = get_user_token()
@@ -50,6 +59,9 @@ def set_board():
     except trolly.ResourceUnavailable:
         print 'bad board id'
         return False
+    except trolly.Unauthorised:
+        print 'bad permissions (refresh token)'
+        return False
 
 #TODO need sensible way to figure out when we need to do a refresh
 def refresh_cards():
@@ -61,6 +73,7 @@ def refresh_cards():
     b = Board(client, user.board_id)
     cards = b.getCards()
     cache.cards = [(unidecode(c.name.decode('utf8')), c.id) for c in cards]
+    return cache.cards
 
 def get_names():
     return cache.cards
@@ -70,6 +83,6 @@ def add_comment_to_card(card_id, comment, move_to_bottom=False):
     client = Client(APP_KEY, token)
     print client, user.board_id
     c = Card(client, card_id)
-    c.addComments(comment)
     if move_to_bottom:
         c.updateCard({'pos':'bottom'})
+    c.addComments(comment)

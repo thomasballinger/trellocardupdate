@@ -29,7 +29,7 @@ def choose(s, possibilities, threshold=.6):
         print 'returning None because', best, 'is below threshold of', threshold
         print 'out of', close
         return None
-    return best
+    return best[0]
 
 def suggestions(s, possibilities):
     #TODO don't use jaro_winkler, or use it more intelligently;
@@ -56,12 +56,11 @@ def print_card_completions(s):
         print x
 
 def get_card_id_and_name(s):
-    print 'looking for card id for', s
     if cache.cards is None:
-        print 'refreshing cards...'; print trello_update.refresh_cards()
+        trello_update.refresh_cards()
     m = choose(unicode(s), [n for n, id_ in cache.cards])
     if m is None: return None, None
-    return [(n, id_) for n, id_ in cache.cards if n == m][0]
+    return [(id_, name) for name, id_ in cache.cards if name == m][0]
 
 def get_cards(board_name, list_name, force_refresh=False):
     """Returns names of trello cards for board"""
@@ -127,7 +126,6 @@ def CLI():
     if not message:
 #TODO populate trello card url
         message = get_message_from_external_editor('NOT YET IMPLEMENTED', card_name, args.move_down)
-    print 'message:', message
 
     if not message.strip():
         print 'Aborting comment due to empty comment message.'
