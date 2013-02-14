@@ -14,7 +14,7 @@ from trolly.card import Card
 # subclassing and saving the json
 
 #TODO I guess this should be hardcoded?
-APP_KEY = os.environ['TRELLO_API_KEY']
+APP_KEY = '10533337e4b5778c1c356c39dd3c79e9'
 
 #TODO trolly has something for this
 def generate_token():
