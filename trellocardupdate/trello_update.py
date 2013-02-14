@@ -27,6 +27,9 @@ def generate_token():
 #TODO decide on a standard way for these to work, or at least check it if while True
 # decide on return code for these too
 def get_user_token():
+    """
+    Returns trello API token if stored, else repeatedly tries to genreate token and returns
+    """
     while True:
         token = user['token']
         if token: return token
@@ -64,7 +67,13 @@ def set_board():
         return False
 
 #TODO need sensible way to figure out when we need to do a refresh
-def refresh_cards():
+def get_cards(cache=False):
+    """
+    Returns [name, id] of cards from cache if cache flag is True else returns from Trello and 
+    refreshes cache
+    """
+    if cache:
+        return cache.cards
     token = get_user_token()
     client = Client(APP_KEY, token)
     print client, user.board_id
@@ -73,7 +82,7 @@ def refresh_cards():
     b = Board(client, user.board_id)
     cards = b.getCards()
     cache.cards = [(unidecode(c.name.decode('utf8')), c.id) for c in cards]
-    return cache.cards
+    return cards
 
 def get_names():
     return cache.cards
