@@ -1,5 +1,4 @@
 import webbrowser
-import os
 from unidecode import unidecode
 
 from local import user, cache
@@ -9,11 +8,6 @@ from trolly.client import Client
 from trolly.board import Board
 from trolly.card import Card
 
-#TODO trolly uses lazy objects, if we're going to cache
-# them we probably ought to do something neater like
-# subclassing and saving the json
-
-#TODO I guess this should be hardcoded?
 APP_KEY = '10533337e4b5778c1c356c39dd3c79e9'
 
 #TODO trolly has something for this
@@ -84,14 +78,15 @@ def get_cards(cache=False):
     cache.cards = [(unidecode(c.name.decode('utf8')), c.id) for c in cards]
     return cards
 
-def get_names():
+def get_card_names():
     return cache.cards
 
 def add_comment_to_card(card_id, comment, move_to_bottom=False):
     token = get_user_token()
     client = Client(APP_KEY, token)
-    print client, user.board_id
     c = Card(client, card_id)
+    c.addComments(comment)
+    print 'card comment added'
     if move_to_bottom:
         c.updateCard({'pos':'bottom'})
-    c.addComments(comment)
+        print 'card moved to bottom of list'

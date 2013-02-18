@@ -1,25 +1,21 @@
 #!/usr/bin/env python
 #TODO write bash completion scripts - matching is already there,
 #the work is just figuring out the syntax again to 'complete'
-#TODO reorganize this junk
 
 import sys
 import re
 from operator import itemgetter
 
-from clint.textui import colored
 import Levenshtein
 
 from external_editor import edit as external_edit
 import trello_update
-from local import user, cache
 import simpledispatchargparse
 
 def choose(s, possibilities, threshold=.6):
     """
     Returns the closest match to string s if exceeds threshold, else returns None 
     """
-    print 'possibilities', possibilities
     if s in possibilities:
         return s
     startswith = [x for x in possibilities if x.lower().startswith(s.lower())]
@@ -54,17 +50,16 @@ def suggestions(s, possibilities):
     return output
 
 def print_card_completions(s):
-    cards = trello_update.get_cards
-    m = suggestions(unicode(s), [n for n, _id in cache.cards])
+    cards = trello_update.get_cards()
+    m = suggestions(unicode(s), [n for n, _id in cards])
     for x in m:
         print x
 
 def get_card_name_and_id(card_query):
-    if cache.cards is None:
-        trello_update.refresh_cards()
-    match = choose(unicode(card_query), [name for name, id_ in cache.cards])
+    cards = trello_update.get_cards()
+    match = choose(unicode(card_query), [name for name, id_ in cards])
     if match is None: return None, None
-    return [(name, id_) for (name, id_) in cache.cards if name == match][0] 
+    return [(name, id_) for (name, id_) in cards if name == match][0]
 
 def get_message_from_external_editor(card_url, card_name, moved_down):
     moved_down_message = "\n#   card will be moved to bottom of stack"
@@ -95,7 +90,7 @@ def CLI():
     #TODO get rid of almost all of these, just good for testing
     @parser.add_command
     def listcards():
-        print 'listing cards'; print trello_update.get_names()
+        print 'listing cards'; print trello_update.get_card_names()
     @parser.add_command(metavar='CARD_NAME')
     def listcardcompletions(s): print 'listing card completions for', s; print_card_completions(s)
     @parser.add_command(metavar='BOARD_ID')
@@ -118,7 +113,7 @@ def CLI():
     card = ' '.join(args.card)
 
 #TODO handle when this doesn't get anything good, decide how lenient - fuzziness mostly happen during completion
-    card_id, card_name = get_card_id_and_name(card)
+    card_id, card_name = get_card_name_and_id(card)
     if card_id is None:
         print "Can't find name for query", card
         sys.exit()
