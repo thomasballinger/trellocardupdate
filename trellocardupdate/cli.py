@@ -21,7 +21,7 @@ def choose(s, possibilities, threshold=.6):
     startswith = [x for x in possibilities if x.lower().startswith(s.lower())]
     if len(startswith) == 1: return startswith[0]
     contained = [x for x in possibilities if s.lower() in x.lower()]
-    if len(contained) == 1: return contained[0]
+    if len(contained) > 1: return contained[0]
     close = sorted([(x, Levenshtein.jaro_winkler(s, x, .05)) for x in possibilities], key=itemgetter(1))
     best = max([(x, Levenshtein.jaro_winkler(s, x, .05)) for x in possibilities], key=itemgetter(1))
     if best[1] < threshold:
@@ -57,7 +57,7 @@ def print_card_completions(s):
 
 def get_card_name_and_id(card_query):
     cards = trello_update.get_cards()
-    match = choose(unicode(card_query), [name for name, id_ in cards])
+    match = choose(unicode(card_query), [unicode(name) for name, id_ in cards])
     if match is None: return None, None
     return [(name, id_) for (name, id_) in cards if name == match][0]
 
@@ -113,7 +113,7 @@ def CLI():
     card = ' '.join(args.card)
 
 #TODO handle when this doesn't get anything good, decide how lenient - fuzziness mostly happen during completion
-    card_id, card_name = get_card_name_and_id(card)
+    card_name, card_id = get_card_name_and_id(card)
     if card_id is None:
         print "Can't find name for query", card
         sys.exit()
