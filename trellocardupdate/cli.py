@@ -112,7 +112,7 @@ def CLI():
 
     #TODO get rid of almost all of these, just good for testing
     @parser.add_command
-    def list_cards(): print 'listing cards'; print trello_update.get_card_names()
+    def list_cards(): print 'listing cards'; print '\n'.join(x[0] for x in trello_update.get_cards())
     @parser.add_command(metavar='BOARD_ID')
     def set_board(s): print 'setting board to', s
     @parser.add_command
