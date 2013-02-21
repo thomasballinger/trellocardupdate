@@ -83,7 +83,9 @@ def get_cards(use_cache=False, client=None):
     refreshes cache
     """
     if use_cache:
-        return cache.cards
+        cards = cache.cards
+        if cards:
+            return cache.cards
     if user.board_id is None:
         set_board()
     b = Board(client, user.board_id)
