@@ -57,6 +57,10 @@ def init_client(new_token=False):
         token = generate_token()
 
 @provide_client
+def get_user_token(client=None):
+    return client.api_key
+
+@provide_client
 def test_token(client=None):
     try:
         b = Board(client, user.board_id)

@@ -77,34 +77,50 @@ def get_message_from_external_editor(card_url, card_name, moved_down):
     message = re.sub(r'[^\n]\n[^\n]', '', message)
     return message
 
-#TODO move this out of here
+def getcompletion(command, arg, prevarg=None):
+    doubledashes = ['--set-board', '--get-token', '--generate-token', '--test-token', '--list-cards']
+    singledashes = ['-d', '-m']
+    if arg in singledashes + doubledashes:
+        print arg
+    elif arg == '-':
+        print '\n'.join([x for x in singledashes if arg in x])
+    elif len(arg) > 1 and arg[:2] == '--':
+        print '\n'.join([x for x in doubledashes if arg in x])
+    elif prevarg == command:
+        print_card_completions(arg)
+    elif prevarg == '-m':
+        print 'TYPE_A_COMMENT_HERE'
+    elif prevarg == '-d':
+        print_card_completions(arg)
+    else:
+        pass
 
 def CLI():
-    parser = simpledispatchargparse.ParserWithSimpleDispatch(description='Trello card updater')
+    # argparse can't parse some arguments to getcompletion
+    if '--get-bash-completion' in sys.argv:
+        i = sys.argv.index('--get-bash-completion')
+        getcompletion(*sys.argv[i+1:i+4])
+        sys.exit()
 
+    parser = simpledispatchargparse.ParserWithSimpleDispatch(
+                description='Trello card updater',
+                usage='%(prog)s cardname [...] [-h] [-d] [-m inlinemessage [...]]')
+
+    parser.add_argument('card', action="store", nargs='+')
     parser.add_argument('-d', '--move-down', action="store_true", default=False)
     parser.add_argument('-m', '--message', action="store", dest="message", nargs='+', help='inline message to add to card (instead of launching editor', default=[])
-    parser.add_argument('card', action="store", nargs='+')
 
     #TODO get rid of almost all of these, just good for testing
     @parser.add_command
-    def listcards():
-        print 'listing cards'; print trello_update.get_card_names()
-    @parser.add_command(metavar=('CMD', 'CARDNAME', 'PREVARGNAME'))
-    def listcardcompletions(command, arg, prevarg):
-        print_card_completions(arg)
+    def list_cards(): print 'listing cards'; print trello_update.get_card_names()
     @parser.add_command(metavar='BOARD_ID')
-    def setboard(s): print 'setting board to', s
+    def set_board(s): print 'setting board to', s
     @parser.add_command
     def get_token(): print 'token:'; print trello_update.get_user_token()
     @parser.add_command
     def generate_token(): print 'generating token...'; print trello_update.generate_token()
     @parser.add_command
     def test_token(): print 'testing token...'; print trello_update.test_token()
-    @parser.add_command
-    def set_board(): print 'setting board...'; print trello_update.set_board()
-    @parser.add_command
-    def refresh_cards(): print 'refreshing cards...'; print trello_update.refresh_cards()
 
     # At this point we've bailed if we're not adding a comment to a person
 
