@@ -1,12 +1,13 @@
+import sys
 import webbrowser
+
 from unidecode import unidecode
-
-from local import user, cache
-
 import trolly
 from trolly.client import Client
 from trolly.board import Board
 from trolly.card import Card
+
+from local import user, cache
 
 APP_KEY = '10533337e4b5778c1c356c39dd3c79e9'
 
@@ -22,7 +23,7 @@ def provide_client(func):
         try:
             return func(*args, **kwargs)
         except trolly.Unauthorised:
-            print 'bad permissions (refresh token)'
+            sys.stderr.write('bad permissions (refresh token)\n')
             init_client(True)
             kwargs['client'] = client
             return newfunc(*args, **kwargs)
@@ -50,7 +51,7 @@ def init_client(new_token=False):
             client = Client(APP_KEY, token)
             return
         token = user.token
-        if token: 
+        if token:
             client = Client(APP_KEY, token)
             return
         token = generate_token()
@@ -59,29 +60,20 @@ def init_client(new_token=False):
 def test_token(client=None):
     try:
         b = Board(client, user.board_id)
-        print b.getBoardInformation()
         return True
     except trolly.ResourceUnavailable:
-        print 'bad board id'
+        sys.stderr.write('bad board id\n')
         return False
     except trolly.Unauthorised:
-        print 'bad permissions (refresh token)'
+        sys.stderr.write('bad permissions (refresh token)\n')
         return False
 
 @provide_client
 def set_board(client=None):
     board_id = raw_input("paste in id of board: ").strip()
     b = Board(client, board_id)
-    try:
-        print b.getBoardInformation()
-        user.board_id = board_id
-        return True
-    except trolly.ResourceUnavailable:
-        print 'bad board id'
-        return False
-    except trolly.Unauthorised:
-        print 'bad permissions (refresh token)'
-        return False
+    user.board_id = board_id
+    return True
 
 @provide_client
 #TODO need sensible way to figure out when we need to do a refresh
@@ -91,9 +83,7 @@ def get_cards(use_cache=False, client=None):
     refreshes cache
     """
     if use_cache:
-        print use_cache, cache.cards
         return cache.cards
-    print client, user.board_id
     if user.board_id is None:
         set_board()
     b = Board(client, user.board_id)
@@ -106,7 +96,7 @@ def get_cards(use_cache=False, client=None):
 def add_comment_to_card(card_id, comment, move_to_bottom=False, client=None):
     c = Card(client, card_id)
     c.addComments(comment)
-    print 'card comment added'
+    sys.stderr.write('card comment added\n')
     if move_to_bottom:
         c.updateCard({'pos':'bottom'})
-        print 'card moved to bottom of list'
+        sys.stderr.write('card moved to bottom of list\n')

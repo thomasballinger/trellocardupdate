@@ -44,14 +44,13 @@ def suggestions(s, possibilities):
     output = []
     for (card_name, score), diff in zip(jws[:-1], diffs):
         output.append(card_name)
-        print diff
         if diff > .05: break
         if len(output) > 5: break
     return output
 
 def print_card_completions(s):
-    cards = trello_update.get_cards()
-    m = suggestions(unicode(s), [n for n, _id in cards])
+    cards = trello_update.get_cards(use_cache=True)
+    m = suggestions(unicode(s), [unicode(n) for n, _id in cards])
     for x in m:
         print x
 
@@ -91,8 +90,9 @@ def CLI():
     @parser.add_command
     def listcards():
         print 'listing cards'; print trello_update.get_card_names()
-    @parser.add_command(metavar='CARD_NAME')
-    def listcardcompletions(s): print 'listing card completions for', s; print_card_completions(s)
+    @parser.add_command(metavar=('CMD', 'CARDNAME', 'PREVARGNAME'))
+    def listcardcompletions(command, arg, prevarg):
+        print_card_completions(arg)
     @parser.add_command(metavar='BOARD_ID')
     def setboard(s): print 'setting board to', s
     @parser.add_command
