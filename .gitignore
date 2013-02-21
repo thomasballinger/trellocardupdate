@@ -1,5 +1,5 @@
 *.pyc
-env
+venv
 *.swp
 *.egg-info
 trello

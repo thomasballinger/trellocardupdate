@@ -6,8 +6,11 @@ Sort of mimics the git interface.
 
 Installation
 ============
-
-`pip install -e TrelloCardUpdater -r TrelloCardUpdater/requirements.txt`
+clone the repo, then
+`cd TrelloCardUpdate`
+`virtualenv venv`
+`source venv/bin/activate`
+`pip install -e . -r requirements.txt`
 
 Current Features:
 =================
@@ -15,3 +18,9 @@ Current Features:
 * ability to add comments to cards
 * fuzzy matching on card name
 * single board at a time, which is persitantly set
+
+Bash Completion
+---------------
+
+For now, just completes cards. Paste this into your bashrc:
+complete -C 'tu --listcardcompletions' tu
