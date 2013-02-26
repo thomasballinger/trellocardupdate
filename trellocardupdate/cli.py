@@ -77,7 +77,15 @@ def get_message_from_external_editor(card_url, card_name, moved_down):
     message = re.sub(r'[^\n]\n[^\n]', '', message)
     return message
 
-def getcompletion(command, arg, prevarg=None):
+def getcompletion(args):
+    if len(args) == 2:
+        command, arg = args
+    elif len(args) == 3:
+        command, arg, prevarg = args
+    else:
+        raise Exception('Bad completions arguments')
+
+
     doubledashes = ['--set-board', '--get-token', '--generate-token', '--test-token', '--list-cards']
     singledashes = ['-d', '-m']
     if arg in singledashes + doubledashes:
@@ -99,7 +107,7 @@ def CLI():
     # argparse can't parse some arguments to getcompletion
     if '--get-bash-completion' in sys.argv:
         i = sys.argv.index('--get-bash-completion')
-        getcompletion(*sys.argv[i+1:i+4])
+        getcompletion(sys.argv[i+1:i+4])
         sys.exit()
 
     parser = simpledispatchargparse.ParserWithSimpleDispatch(

@@ -23,4 +23,4 @@ Bash Completion
 ---------------
 
 For now, just completes cards. Paste this into your bashrc:
-complete -C 'tu --listcompletions' tu
+complete -C 'tu --listbashcompletions' tu
