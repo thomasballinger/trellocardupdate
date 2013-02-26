@@ -19,13 +19,11 @@ def provide_client(func):
     """
     init_client()
     def newfunc(*args, **kwargs):
-        kwargs['client'] = client
         try:
             return func(*args, **kwargs)
         except trolly.Unauthorised:
             sys.stderr.write('bad permissions (refresh token)\n')
             init_client(True)
-            kwargs['client'] = client
             return newfunc(*args, **kwargs)
     return newfunc
 
@@ -57,11 +55,11 @@ def init_client(new_token=False):
         token = generate_token()
 
 @provide_client
-def get_user_token(client=None):
+def get_user_token():
     return client.api_key
 
 @provide_client
-def test_token(client=None):
+def test_token():
     try:
         b = Board(client, user.board_id)
         return True
@@ -73,7 +71,7 @@ def test_token(client=None):
         return False
 
 @provide_client
-def set_board(client=None):
+def set_board():
     board_id = raw_input("paste in id of board: ").strip()
     b = Board(client, board_id)
     user.board_id = board_id
@@ -81,7 +79,7 @@ def set_board(client=None):
 
 @provide_client
 #TODO need sensible way to figure out when we need to do a refresh
-def get_cards(use_cache=False, client=None):
+def get_cards(use_cache=False):
     """
     Returns [name, id] of cards from cache if cache flag is True else returns from Trello and 
     refreshes cache
@@ -99,7 +97,7 @@ def get_cards(use_cache=False, client=None):
     return card_names_and_ids
 
 @provide_client
-def add_comment_to_card(card_id, comment, move_to_bottom=False, client=None):
+def add_comment_to_card(card_id, comment, move_to_bottom=False):
     c = Card(client, card_id)
     c.addComments(comment)
     sys.stderr.write('card comment added\n')
