@@ -14,7 +14,7 @@ import simpledispatchargparse
 
 def choose(s, possibilities, threshold=.6):
     """
-    Returns the closest match to string s if exceeds threshold, else returns None 
+    Returns the closest match to string s if exceeds threshold, else returns None
     """
     if s in possibilities:
         return s

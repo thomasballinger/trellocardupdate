@@ -22,5 +22,5 @@ Current Features:
 Bash Completion
 ---------------
 
-For now, just completes cards. Paste this into your bashrc:
-complete -C 'tu --listbashcompletions' tu
+For now, just completes cards and --flags. Paste this into your bashrc:
+complete -C 'tu --get-bash-completion' tu
