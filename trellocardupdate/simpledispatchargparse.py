@@ -27,8 +27,6 @@ class ParserWithSimpleDispatch(argparse.ArgumentParser):
             if value is not None:
                 if len(inspect.getargspec(func).args) == 1:
                     func(value)
-                if len(inspect.getargspec(func).args) == 3:
-                    func(*value)
                 else:
                     func()
                 sys.exit()
@@ -58,9 +56,6 @@ class ParserWithSimpleDispatch(argparse.ArgumentParser):
             elif len(inspect.getargspec(func).args) == 1:
                 add_simple_argument(self.simple_group, default=None)
                 add_simple_argument(self.doc_group, default=None)
-            elif len(inspect.getargspec(func).args) == 3:
-                add_simple_argument(self.simple_group, nargs=3)
-                add_simple_argument(self.doc_group, nargs=3)
             else:
                 raise TypeError("Functions need to take one or zero args")
             self.simple_functions_by_flag[flag] = func
