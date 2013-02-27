@@ -65,7 +65,8 @@ def get_user_token():
 @provide_client
 def test_token():
     try:
-        b = Board(client, user.board_id)
+        Board(client, user.board_id).getBoardInformation()
+        import pdb; pdb.set_trace()
         return True
     except trolly.ResourceUnavailable:
         sys.stderr.write('bad board id\n')
@@ -81,7 +82,7 @@ def set_board():
     except KeyboardInterrupt:
         print '\nboard set canceled'
         sys.exit(1)
-    b = Board(client, board_id)
+    Board(client, board_id).getBoardInformation()
     user.board_id = board_id
     return True
 
