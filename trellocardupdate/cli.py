@@ -10,7 +10,7 @@ import Levenshtein
 
 from external_editor import edit as external_edit
 import trello_update
-import simpledispatchargparse
+import argparse
 
 def choose(s, possibilities, threshold=.6):
     """
@@ -103,54 +103,56 @@ def getcompletion(args):
     else:
         pass
 
+def add_comment(args):
+    message = ' '.join(args.message)
+    card = ' '.join(args.card)
+    card_name, card_id = get_card_name_and_id(card)
+    if card_id is None:
+        print "Can't find card for query", card
+        sys.exit()
+    if not message:
+    #TODO populate trello card url
+        message = get_message_from_external_editor('NOT YET IMPLEMENTED', card_name, args.move_down)
+    if not message.strip():
+        print 'Aborting comment due to empty comment message.'
+        sys.exit()
+    trello_update.add_comment_to_card(card_id, message, args.move_down)
+
 def CLI():
-    # argparse can't parse some arguments to getcompletion
+    # argparse can't parse some arguments to getcompletion, so special cased here
     if '--get-bash-completion' in sys.argv:
         i = sys.argv.index('--get-bash-completion')
         getcompletion(sys.argv[i+1:i+4])
         sys.exit()
 
-    parser = simpledispatchargparse.ParserWithSimpleDispatch(
-                description='Trello card updater',
-                usage='%(prog)s cardname [...] [-h] [-d] [-m inlinemessage [...]]')
+    parser = argparse.ArgumentParser(
+                description='Trello card updater')
 
-    parser.add_argument('card', action="store", nargs='+')
-    parser.add_argument('-d', '--move-down', action="store_true", default=False)
-    parser.add_argument('-m', '--message', action="store", dest="message", nargs='+', help='inline message to add to card (instead of launching editor', default=[])
+    subparsers = parser.add_subparsers(help='action')
 
-    #TODO get rid of almost all of these, just good for testing
-    @parser.add_command
-    def list_cards(): print 'listing cards'; print '\n'.join(x[0] for x in trello_update.get_cards())
-    @parser.add_command()
-    def set_board(): print 'setting board...'; trello_update.set_board()
-    @parser.add_command
-    def get_token(): print 'token:'; print trello_update.get_user_token()
-    @parser.add_command
-    def generate_token(): print 'generating token...'; print trello_update.generate_token()
-    @parser.add_command
-    def test_token(): print 'testing token...'; print trello_update.test_token()
+    comment = subparsers.add_parser('comment', help='add comment to card')
+    comment.add_argument('card', action="store", nargs='+')
+    comment.add_argument('-d', '--move-down', action="store_true", default=False)
+    comment.add_argument('-m', '--message', action="store", dest="message", nargs='+', help='inline message to add to card (instead of launching editor', default=[])
+    comment.set_defaults(action=add_comment)
 
-    # At this point we've bailed if we're not adding a comment to a person
+    board = subparsers.add_parser('board', help='set the active board')
+    board.set_defaults(action=lambda args: trello_update.set_board)
+
+    token = subparsers.add_parser('token', help='actions with Trello API key')
+    token.set_defaults(action=lambda args: sys.stdout.write(str(trello_update.test_token())+'\n'))
+    token.add_argument('--get', action="store_const", dest='action',
+                       const=lambda args: trello_update.get_user_token())
+    token.add_argument('--generate', action="store_const", dest='action',
+                       const=lambda args: trello_update.generate_token())
+    token.add_argument('--test', action="store_const", dest='action',
+                       const=lambda args: trello_update.test_token())
+
+    cards = subparsers.add_parser('cards', help='display all cards')
+    cards.set_defaults(action=lambda args: sys.stdout.write('\n'.join(x[0] for x in trello_update.get_cards())+'\n'))
 
     args = parser.parse_args(sys.argv[1:])
-    message = ' '.join(args.message)
-    card = ' '.join(args.card)
-
-#TODO handle when this doesn't get anything good, decide how lenient - fuzziness mostly happen during completion
-    card_name, card_id = get_card_name_and_id(card)
-    if card_id is None:
-        print "Can't find name for query", card
-        sys.exit()
-    print 'got', card_id, card_name
-
-    if not message:
-#TODO populate trello card url
-        message = get_message_from_external_editor('NOT YET IMPLEMENTED', card_name, args.move_down)
-
-    if not message.strip():
-        print 'Aborting comment due to empty comment message.'
-        sys.exit()
-    trello_update.add_comment_to_card(card_id, message, args.move_down)
+    args.action(args)
 
 #TODO add ability to edit last comment
 #TODO add ability to read last all comments on a person
