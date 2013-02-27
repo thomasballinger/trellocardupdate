@@ -46,17 +46,12 @@ def init_client(new_token=False):
     Initializes the client use for all Trello requests as a module-level variable
     """
     global client
-    while True:
-        if new_token:
-            token = generate_token()
-            user.token = token
-            client = Client(APP_KEY, token)
-            return
-        token = user.token
-        if token:
-            client = Client(APP_KEY, token)
-            return
+    if new_token or not user.token:
         token = generate_token()
+        user.token = token
+    else:
+        token = user.token
+    client = Client(APP_KEY, token)
 
 @provide_client
 def get_user_token():
@@ -66,7 +61,6 @@ def get_user_token():
 def test_token():
     try:
         Board(client, user.board_id).getBoardInformation()
-        import pdb; pdb.set_trace()
         return True
     except trolly.ResourceUnavailable:
         sys.stderr.write('bad board id\n')
@@ -82,9 +76,18 @@ def set_board():
     except KeyboardInterrupt:
         print '\nboard set canceled'
         sys.exit(1)
-    Board(client, board_id).getBoardInformation()
+
+    try:
+        Board(client, board_id).getBoardInformation()
+    except trolly.ResourceUnavailable:
+        sys.stderr.write('bad board id\n')
+        return False
+    except trolly.Unauthorised:
+        sys.stderr.write('bad permissions (refresh token)\n')
+        return False
+
     user.board_id = board_id
-    return True
+    return board_id
 
 @provide_client
 #TODO need sensible way to figure out when we need to do a refresh
@@ -98,8 +101,10 @@ def get_cards(use_cache=False):
         if cards:
             return cache.cards
     if user.board_id is None:
-        set_board()
-    b = Board(client, user.board_id)
+        board_id = set_board()
+    else:
+        board_id = user.board_id
+    b = Board(client, board_id)
     cards = b.getCards()
     card_names_and_ids = [(unidecode(c.name.decode('utf8')), c.id) for c in cards]
     cache.cards = card_names_and_ids
