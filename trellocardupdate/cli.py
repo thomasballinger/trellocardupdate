@@ -114,6 +114,14 @@ def add_comment(args):
         sys.exit()
     trello_update.add_comment_to_card(card_id, message, args.move_down)
 
+def list_cards(args):
+    try:
+        limit = int(args.limit[0])
+    except ValueError:
+        limit = None
+    sys.stdout.write('\n'.join(name for name, _ in trello_update.get_cards()[:limit])+'\n')
+
+
 def CLI():
     # argparse can't parse some arguments to getcompletion, so special cased here
     if '--get-bash-completion' in sys.argv:
@@ -146,7 +154,8 @@ def CLI():
                        const=print_token_test)
 
     cards = subparsers.add_parser('cards', help='display all cards')
-    cards.set_defaults(action=lambda args: sys.stdout.write('\n'.join(x[0] for x in trello_update.get_cards())+'\n'))
+    cards.add_argument('-l', '--limit', nargs=1, help='limit the number of cards shown', default=None)
+    cards.set_defaults(action=list_cards)
 
     args = parser.parse_args(sys.argv[1:])
     args.action(args)
