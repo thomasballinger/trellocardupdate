@@ -136,13 +136,14 @@ def CLI():
     board.set_defaults(action=lambda args: trello_update.set_board())
 
     token = subparsers.add_parser('token', help='actions with Trello API key')
-    token.set_defaults(action=lambda args: sys.stdout.write(str(trello_update.test_token())+'\n'))
+    print_token_test = lambda args: sys.stdout.write(str(trello_update.test_token())+'\n')
+    token.set_defaults(action=print_token_test)
     token.add_argument('--get', action="store_const", dest='action',
-                       const=lambda args: trello_update.get_user_token())
+                       const=lambda args: sys.stdout.write(trello_update.get_user_token()+'\n'))
     token.add_argument('--generate', action="store_const", dest='action',
                        const=lambda args: trello_update.generate_token())
     token.add_argument('--test', action="store_const", dest='action',
-                       const=lambda args: trello_update.test_token())
+                       const=print_token_test)
 
     cards = subparsers.add_parser('cards', help='display all cards')
     cards.set_defaults(action=lambda args: sys.stdout.write('\n'.join(x[0] for x in trello_update.get_cards())+'\n'))

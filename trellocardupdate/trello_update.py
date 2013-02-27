@@ -31,7 +31,11 @@ def provide_client(func):
 def generate_token():
     url = "https://trello.com/1/authorize?key=%s&name=trello-card-updater&expiration=1day&response_type=token&scope=read,write" % APP_KEY
     webbrowser.open(url)
-    token = raw_input("paste in token: ").strip()
+    try:
+        token = raw_input("paste in token: ").strip()
+    except KeyboardInterrupt:
+        print '\ntoken set canceled'
+        sys.exit(1)
     user.token = token
     return user.token
 
@@ -72,7 +76,11 @@ def test_token():
 
 @provide_client
 def set_board():
-    board_id = raw_input("paste in id of board: ").strip()
+    try:
+        board_id = raw_input("paste in id of board: ").strip()
+    except KeyboardInterrupt:
+        print '\nboard set canceled'
+        sys.exit(1)
     b = Board(client, board_id)
     user.board_id = board_id
     return True
