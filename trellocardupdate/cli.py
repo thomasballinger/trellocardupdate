@@ -25,8 +25,7 @@ def choose(s, possibilities, threshold=.6):
     close = sorted([(x, Levenshtein.jaro_winkler(s, x, .05)) for x in possibilities], key=itemgetter(1))
     best = max([(x, Levenshtein.jaro_winkler(s, x, .05)) for x in possibilities], key=itemgetter(1))
     if best[1] < threshold:
-        print 'returning None because', best, 'is below threshold of', threshold
-        print 'out of', close
+        print 'did you mean %s?' % best[0]
         return None
     return best[0]
 
@@ -48,11 +47,10 @@ def suggestions(s, possibilities):
         if len(output) > 5: break
     return output
 
-def print_card_completions(s):
+def get_card_completions(s):
     cards = trello_update.get_cards(use_cache=True)
     m = suggestions(unicode(s), [unicode(n) for n, _id in cards])
-    for x in m:
-        print x
+    return m
 
 def get_card_name_and_id(card_query):
     cards = trello_update.get_cards()
@@ -78,28 +76,26 @@ def get_message_from_external_editor(card_url, card_name, moved_down):
     return message
 
 def getcompletion(args):
-    if len(args) == 2:
-        command, arg = args
-    elif len(args) == 3:
-        command, arg, prevarg = args
-    else:
+    assert len(args) == 3
+    try:
+        first, arg, prevarg = args
+    except ValueError:
         raise Exception('Bad completions arguments')
-
-
-    doubledashes = ['--set-board', '--get-token', '--generate-token', '--test-token', '--list-cards']
-    singledashes = ['-d', '-m']
-    if arg in singledashes + doubledashes:
-        print arg
-    elif arg == '-':
-        print '\n'.join([x for x in singledashes if arg in x])
-    elif len(arg) > 1 and arg[:2] == '--':
-        print '\n'.join([x for x in doubledashes if arg in x])
-    elif prevarg == command:
-        print_card_completions(arg)
+    subcommands = ['board', 'cards', 'token', 'comment']
+    comment_flags = ['-d', '-m', '--message', '--move-down']
+    token_flags = ['--get', '--generate', '--test']
+    if prevarg == first:
+        print '\n'.join([x for x in subcommands + ['-h', '--help'] if arg in x])
+    elif prevarg in ['board', 'cards']:
+        pass
+    elif prevarg == 'comment':
+        print '\n'.join([x for x in comment_flags + get_card_completions(arg) if arg in x])
+    elif prevarg == 'token':
+        print '\n'.join([x for x in token_flags if arg in x])
     elif prevarg == '-m':
         print 'TYPE_A_COMMENT_HERE'
     elif prevarg == '-d':
-        print_card_completions(arg)
+        print '\n'.join(get_card_completions(arg))
     else:
         pass
 
@@ -137,7 +133,7 @@ def CLI():
     comment.set_defaults(action=add_comment)
 
     board = subparsers.add_parser('board', help='set the active board')
-    board.set_defaults(action=lambda args: trello_update.set_board)
+    board.set_defaults(action=lambda args: trello_update.set_board())
 
     token = subparsers.add_parser('token', help='actions with Trello API key')
     token.set_defaults(action=lambda args: sys.stdout.write(str(trello_update.test_token())+'\n'))
@@ -155,7 +151,7 @@ def CLI():
     args.action(args)
 
 #TODO add ability to edit last comment
-#TODO add ability to read last all comments on a person
+#TODO add ability to read last all comments on a card
 
 if __name__ == '__main__':
     CLI()
