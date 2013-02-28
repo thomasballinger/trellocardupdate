@@ -117,7 +117,7 @@ def add_comment(args):
 def list_cards(args):
     try:
         limit = int(args.limit[0])
-    except ValueError:
+    except (ValueError, TypeError):
         limit = None
     sys.stdout.write('\n'.join(name for name, _ in trello_update.get_cards()[:limit])+'\n')
 
