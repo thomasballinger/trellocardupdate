@@ -29,7 +29,7 @@ def provide_client(func):
 
 #TODO trolly has something for this
 def generate_token():
-    url = "https://trello.com/1/authorize?key=%s&name=trello-card-updater&expiration=1day&response_type=token&scope=read,write" % APP_KEY
+    url = "https://trello.com/1/authorize?key=" + APP_KEY + "&name=trello-card-updater&response_type=token&scope=read,write"
     webbrowser.open(url)
     try:
         token = raw_input("paste in token: ").strip()
