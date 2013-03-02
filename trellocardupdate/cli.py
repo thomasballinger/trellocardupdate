@@ -115,7 +115,7 @@ def add_comment(args):
     trello_update.add_comment_to_card(card_id, message, args.move_down)
 
 def list_cards(args):
-    sys.stdout.write('\n'.join(name for name, _ in trello_update.get_cards()[:args.limit])+'\n')
+    sys.stdout.write(''.join(name+'\n' for name, _ in trello_update.get_cards()[:args.limit]))
 
 
 def CLI():
