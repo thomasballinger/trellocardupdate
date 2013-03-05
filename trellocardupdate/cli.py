@@ -72,7 +72,6 @@ def get_message_from_external_editor(card_url, card_name, moved_down):
 #""".format(card_name=card_name, card_url=card_url, moved_down=moved_down_message if moved_down else '')
     from_external = external_edit(prompt)
     message = '\n'.join([line for line in from_external.split('\n') if ((len(line) > 0 and line[0] != '#'))])
-    message = re.sub(r'[^\n]\n[^\n]', '', message)
     return message
 
 def getcompletion(args):
@@ -150,7 +149,7 @@ def CLI():
                        const=print_token_test)
 
     cards = subparsers.add_parser('cards', help='display all cards')
-    cards.add_argument('-l', '--limit', type=int, default=sys.maxint, help='limit the number of cards shown')
+    cards.add_argument('limit', type=int, default=sys.maxint, help='limit the number of cards shown')
     cards.set_defaults(action=list_cards)
 
     args = parser.parse_args(sys.argv[1:])
