@@ -3,7 +3,6 @@
 #the work is just figuring out the syntax again to 'complete'
 
 import sys
-import re
 from operator import itemgetter
 
 import Levenshtein
@@ -18,14 +17,16 @@ def choose(s, possibilities, threshold=.6):
     """
     if s in possibilities:
         return s
+    if s == '':
+        return None
     startswith = [x for x in possibilities if x.lower().startswith(s.lower())]
     if len(startswith) == 1: return startswith[0]
     contained = [x for x in possibilities if s.lower() in x.lower()]
-    if len(contained) > 1: return contained[0]
+    if len(contained) == 1: return contained[0]
     close = sorted([(x, Levenshtein.jaro_winkler(s, x, .05)) for x in possibilities], key=itemgetter(1))
     best = max([(x, Levenshtein.jaro_winkler(s, x, .05)) for x in possibilities], key=itemgetter(1))
     if best[1] < threshold:
-        print 'did you mean %s?' % best[0]
+        #print 'did you mean %s?' % best[0]
         return None
     return best[0]
 
@@ -88,7 +89,13 @@ def getcompletion(args):
     elif prevarg in ['board', 'cards']:
         pass
     elif prevarg == 'comment':
-        print '\n'.join([x for x in comment_flags + get_card_completions(arg) if arg in x])
+        cards = trello_update.get_cards(use_cache=True)
+        match = choose(unicode(arg), [unicode(name) for name, id_ in cards], .98)
+        if match:
+            print match
+        else:
+            print '\n'.join(suggestions(unicode(arg), [unicode(name) for name, id_ in cards]))
+        #print '\n'.join([x for x in comment_flags + get_card_completions(arg) if arg in x])
     elif prevarg == 'token':
         print '\n'.join([x for x in token_flags if arg in x])
     elif prevarg == '-m':
