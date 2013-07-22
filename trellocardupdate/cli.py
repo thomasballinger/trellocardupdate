@@ -121,7 +121,7 @@ def add_comment(args):
     trello_update.add_comment_to_card(card_id, message, args.move_down)
 
 def list_cards(args):
-    sys.stdout.write(''.join(name+'\n' for name, _ in trello_update.get_cards()[:args.limit]))
+    sys.stdout.write(''.join(name+'\n' for name, _ in trello_update.get_cards(verbose=args.verbose)[:args.limit]))
 
 
 def CLI():
@@ -157,6 +157,7 @@ def CLI():
 
     cards = subparsers.add_parser('cards', help='display all cards')
     cards.add_argument('limit', type=int, default=sys.maxint, help='limit the number of cards shown')
+    cards.add_argument('-v', '--verbose', action="store_true", dest='verbose', help='get more info')
     cards.set_defaults(action=list_cards)
 
     args = parser.parse_args(sys.argv[1:])

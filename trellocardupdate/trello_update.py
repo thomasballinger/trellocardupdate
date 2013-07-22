@@ -91,7 +91,7 @@ def set_board():
 
 @provide_client
 #TODO need sensible way to figure out when we need to do a refresh
-def get_cards(use_cache=False):
+def get_cards(use_cache=False, verbose=False):
     """
     Returns [name, id] of cards from cache if cache flag is True else returns from Trello and 
     refreshes cache
@@ -106,9 +106,14 @@ def get_cards(use_cache=False):
         board_id = user.board_id
     b = Board(client, board_id)
     cards = b.getCards()
-    card_names_and_ids = [(unidecode(c.name.decode('utf8')), c.id) for c in cards]
-    cache.cards = card_names_and_ids
-    return card_names_and_ids
+
+    if verbose:
+        card_names_and_ids = [(unidecode(c.name.decode('utf8')), c.id) for c in cards]
+        return card_names_and_ids
+    else:
+        card_names_and_ids = [(unidecode(c.name.decode('utf8')), c.id) for c in cards]
+        cache.cards = card_names_and_ids
+        return card_names_and_ids
 
 @provide_client
 def add_comment_to_card(card_id, comment, move_to_bottom=False):
