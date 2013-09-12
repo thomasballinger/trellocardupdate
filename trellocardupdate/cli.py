@@ -156,7 +156,7 @@ def CLI():
                        const=print_token_test)
 
     cards = subparsers.add_parser('cards', help='display all cards')
-    cards.add_argument('limit', type=int, default=sys.maxint, help='limit the number of cards shown')
+    cards.add_argument('limit', type=int, nargs='?', default=sys.maxint, help='limit the number of cards shown')
     cards.add_argument('-v', '--verbose', action="store_true", dest='verbose', help='get more info')
     cards.set_defaults(action=list_cards)
 
