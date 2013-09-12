@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='TrelloCardUpdate',
-    version='0.0.1',
+    version='0.0.3',
     author='Thomas Ballinger',
     author_email='tom@hackerschool.com',
     packages=['trellocardupdate'],
