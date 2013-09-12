@@ -1,12 +1,20 @@
-from distutils.core import setup
+from setuptools import setup
 
 setup(
     name='TrelloCardUpdate',
-    version='0.0.0',
+    version='0.0.1',
     author='Thomas Ballinger',
     author_email='tom@hackerschool.com',
-    packages=['trellocardupdate', 'trellocardupdate.test'],
+    packages=['trellocardupdate'],
     scripts=['bin/tu.py', 'bin/tu'],
+    url='https://github.com/thomasballinger/trellocardupdate',
+    install_requires=[
+        'unidecode',
+        'python_Levenshtein',
+        'clint',
+        'httplib2',
+        'trolly',
+        ],
     license='LICENSE.txt',
     description='basic command line trello client',
     long_description=open('README.txt').read(),
