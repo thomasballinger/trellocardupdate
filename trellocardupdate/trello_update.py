@@ -71,8 +71,12 @@ def test_token():
 
 @provide_client
 def set_board():
+    if user.board_id:
+        print 'current board id: %s, https://trello.com/b/%s' % (user.board_id, user.board_id)
+    else:
+        print 'no board currently selected'
     try:
-        board_id = raw_input("paste in id of board: ").strip()
+        board_id = raw_input("paste in id of new board, or ctl-c to cancel: ").strip()
     except KeyboardInterrupt:
         print '\nboard set canceled'
         sys.exit(1)

@@ -22,7 +22,7 @@ class LocalStorage(object):
         setattr(self, key, value)
 
 class LocalObfuscatedStorage(LocalStorage):
-    """Of questionable use, but should avoid indexing"""
+    """Of questionable use, but should avoid card names being indexed"""
     def __getattr__(self, att):
         s = self.res.read(att)
         if s is None:
