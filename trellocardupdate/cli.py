@@ -1,29 +1,28 @@
 #!/usr/bin/env python
-#TODO write bash completion scripts - matching is already there,
-#the work is just figuring out the syntax again to 'complete'
 
 import sys
+import collections
 from operator import itemgetter
 
 import Levenshtein
 
 from external_editor import edit as external_edit
-import trello_update
+import trelloupdate
 import argparse
+
+updater = trelloupdate.TrelloUpdater()
 
 def choose(s, possibilities, threshold=.6):
     """
     Returns the closest match to string s if exceeds threshold, else returns None
     """
-    if s in possibilities:
-        return s
-    if s == '':
-        return None
+    if not possibilities: return None
+    if s in possibilities: return s
+    if s == '': return None
     startswith = [x for x in possibilities if x.lower().startswith(s.lower())]
     if len(startswith) == 1: return startswith[0]
     contained = [x for x in possibilities if s.lower() in x.lower()]
     if len(contained) == 1: return contained[0]
-    close = sorted([(x, Levenshtein.jaro_winkler(s, x, .05)) for x in possibilities], key=itemgetter(1))
     best = max([(x, Levenshtein.jaro_winkler(s, x, .05)) for x in possibilities], key=itemgetter(1))
     if best[1] < threshold:
         #print 'did you mean %s?' % best[0]
@@ -34,6 +33,7 @@ def suggestions(s, possibilities):
     #TODO don't use jaro_winkler, or use it more intelligently;
     # ie break up words and match on each of them
     # jaro_winkler weighs the front more
+    if not possibilities: return []
     startswith = [x for x in possibilities if x.lower().startswith(s.lower())]
     if startswith: return startswith
     contained = [x for x in possibilities if s.lower() in x.lower()]
@@ -49,12 +49,13 @@ def suggestions(s, possibilities):
     return output
 
 def get_card_completions(s):
-    cards = trello_update.get_cards(use_cache=True)
+    cards = updater.cached_card_names_and_ids
     m = suggestions(unicode(s), [unicode(n) for n, _id in cards])
     return m
 
 def get_card_name_and_id(card_query):
-    cards = trello_update.get_cards()
+    cards = updater.card_names_and_ids
+    if not cards: return None, None
     match = choose(unicode(card_query), [unicode(name) for name, id_ in cards])
     if match is None: return None, None
     return [(name, id_) for (name, id_) in cards if name == match][0]
@@ -62,18 +63,23 @@ def get_card_name_and_id(card_query):
 def get_message_from_external_editor(card_url, card_name, moved_down):
     moved_down_message = "\n#   card will be moved to bottom of stack"
 
-    prompt = """
-# Please enter the message you'd like to add to card. Lines starting
-# with '#' will be ignored, and an empty message aborts the commit.
-# On card {card_name}
-# Changes to be committed:
-#   (url of card: {card_url})
-#
-#   message will be added to card{moved_down}
-#""".format(card_name=card_name, card_url=card_url, moved_down=moved_down_message if moved_down else '')
+    template = ("\n"
+    "# Please enter the message you'd like to add to card. Lines starting\n"
+    "# with '#' will be ignored, and an empty message aborts the commit.\n"
+    "# On card {card_name}\n"
+    "# Changes to be committed:\n"
+    "#   (url of card: {card_url})\n"
+    "#\n"
+    "#   message will be added to card{moved_down}\n")
+
+    prompt = template.format(card_name=card_name,
+                            card_url=card_url,
+                            moved_down=moved_down_message if moved_down else '')
+
     from_external = external_edit(prompt)
-    message = '\n'.join([line for line in from_external.split('\n') if ((len(line) > 0 and line[0] != '#'))])
-    return message
+
+    return '\n'.join([line for line in from_external.split('\n')
+                           if ((len(line) > 0 and line[0] != '#'))])
 
 def getcompletion(args):
     assert len(args) == 3
@@ -89,7 +95,8 @@ def getcompletion(args):
     elif prevarg in ['board', 'cards']:
         pass
     elif prevarg == 'comment':
-        cards = trello_update.get_cards(use_cache=True)
+        cards = updater.cached_card_names_and_ids
+
         match = choose(unicode(arg), [unicode(name) for name, id_ in cards], .98)
         if match:
             print match
@@ -103,7 +110,16 @@ def getcompletion(args):
     elif prevarg == '-d':
         print '\n'.join(get_card_completions(arg))
     else:
-        pass
+        cards = updater.cached_card_names_and_ids
+        next_name_part = collections.defaultdict(list)
+        for name in [unicode(name) for name, id_ in cards]:
+            nameparts = name.split()
+            for cur, next in zip(nameparts[:-1], nameparts[1:]):
+                next_name_part[cur].append(next)
+        if prevarg in next_name_part:
+            print '\n'.join(suggestion for suggestion in next_name_part[prevarg] if arg.lower() in suggestion.lower())
+        else:
+            pass
 
 def add_comment(args):
     message = ' '.join(args.message)
@@ -118,18 +134,20 @@ def add_comment(args):
     if not message.strip():
         print 'Aborting comment due to empty comment message.'
         sys.exit()
-    trello_update.add_comment_to_card(card_id, message, args.move_down)
+    updater.add_comment_to_card(card_id, message, args.move_down)
 
 def list_cards(args):
-    sys.stdout.write(''.join(name+'\n' for name, _ in trello_update.get_cards(verbose=args.verbose)[:args.limit]))
+    sys.stdout.write(''.join(name+'\n' for name, _ in updater.card_names_and_ids[:args.limit]))
 
 
 def CLI():
+
     # argparse can't parse some arguments to getcompletion, so special cased here
     if '--get-bash-completion' in sys.argv:
         i = sys.argv.index('--get-bash-completion')
         getcompletion(sys.argv[i+1:i+4])
         sys.exit()
+
 
     parser = argparse.ArgumentParser(
                 description='Trello card updater')
@@ -143,21 +161,19 @@ def CLI():
     comment.set_defaults(action=add_comment)
 
     board = subparsers.add_parser('board', help='set the active board')
-    board.set_defaults(action=lambda args: trello_update.set_board())
+    board.set_defaults(action=lambda args: updater.set_board())
 
     token = subparsers.add_parser('token', help='actions with Trello API key')
-    print_token_test = lambda args: sys.stdout.write(str(trello_update.test_token())+'\n')
-    token.set_defaults(action=print_token_test)
+    token.set_defaults(action=lambda args: updater.test_token())
     token.add_argument('--get', action="store_const", dest='action',
-                       const=lambda args: sys.stdout.write(trello_update.get_user_token()+'\n'))
+                       const=lambda args: sys.stdout.write(updater.token+'\n'))
     token.add_argument('--generate', action="store_const", dest='action',
-                       const=lambda args: trello_update.generate_token())
+                       const=lambda args: updater.generate_token())
     token.add_argument('--test', action="store_const", dest='action',
-                       const=print_token_test)
+                       const=lambda args: updater.test_token())
 
     cards = subparsers.add_parser('cards', help='display all cards')
     cards.add_argument('limit', type=int, nargs='?', default=sys.maxint, help='limit the number of cards shown')
-    cards.add_argument('-v', '--verbose', action="store_true", dest='verbose', help='get more info')
     cards.set_defaults(action=list_cards)
 
     args = parser.parse_args(sys.argv[1:])

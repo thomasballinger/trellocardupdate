@@ -3,3 +3,5 @@ venv
 *.swp
 *.egg-info
 trello
+build
+dist
