@@ -29,9 +29,13 @@ def retry_on_bad_auth(func):
                 self.save_key('token', None)
     return retry_version
 
-def cached_accessor(att):
+def cached_accessor(func_or_att):
     """Decorated function checks in-memory cache and disc cache for att first"""
-    def make_cached_accessor(func):
+    if callable(func_or_att): #allows decorator to be called without arguments
+        att = func_or_att.__name__
+        return cached_accessor(func_or_att.__name__)(func_or_att)
+    att = func_or_att
+    def make_cached_function(func):
         @wraps(func)
         def cached_check_version(self):
             private_att = '_'+att
@@ -45,7 +49,7 @@ def cached_accessor(att):
             self.save_key(att, value)
             return value
         return cached_check_version
-    return make_cached_accessor
+    return make_cached_function
 
 class TrelloUpdater(object):
 
@@ -96,7 +100,7 @@ class TrelloUpdater(object):
             return data.get(key, None)
 
     @property
-    @cached_accessor('board_id')
+    @cached_accessor
     @retry_on_bad_auth
     def board_id(self):
         board_id = self.ask_for_board_id()
@@ -112,14 +116,14 @@ class TrelloUpdater(object):
         return board_id
 
     @property
-    @cached_accessor('token')
+    @cached_accessor
     def token(self):
         webbrowser.open(TrelloUpdater.AUTH_URL)
         token = raw_input("paste in token: ").strip()
         return token
 
     @property
-    @cached_accessor('card_names_and_ids')
+    @cached_accessor
     @retry_on_bad_auth
     def card_names_and_ids(self):
         """Returns [(name, id), ...] pairs of cards from current board"""
