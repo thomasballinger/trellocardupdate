@@ -59,7 +59,7 @@ class TrelloUpdater(object):
     def __init__(self, filename=os.path.expanduser('~/.trelloupdate')):
         self.filename = filename
         self._board_id = None
-        self._card_names_and_ids = None
+        self._card_names_and_ids = []
         self._client = None
         self._token = None
 
@@ -166,6 +166,7 @@ class TrelloUpdater(object):
         try:
             self._board_id = None
             self.save_key('board_id', None)
+            self.save_key('card_names_and_ids', [])
             self.board_id
         except KeyboardInterrupt:
             self._board_id = old_board_id

@@ -95,7 +95,7 @@ def getcompletion(args):
         print '\n'.join([x for x in subcommands + ['-h', '--help'] if arg in x])
     elif prevarg in ['board', 'cards']:
         pass
-    elif prevarg == 'comment':
+    elif prevarg in ['comment', 'show']:
         cards = updater.cached_card_names_and_ids
 
         match = choose(unicode(arg), [unicode(name) for name, id_ in cards], .98)
