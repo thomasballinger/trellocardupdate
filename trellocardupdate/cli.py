@@ -2,6 +2,7 @@
 
 import sys
 import collections
+import webbrowser
 from operator import itemgetter
 
 import Levenshtein
@@ -139,6 +140,13 @@ def add_comment(args):
 def list_cards(args):
     sys.stdout.write(''.join(name+'\n' for name, _ in updater.card_names_and_ids[:args.limit]))
 
+def show_card_or_board(args):
+    card = ' '.join(args.card)
+    card_name, card_id = get_card_name_and_id(card)
+    if card:
+        webbrowser.open('https://trello.com/c/%s' % card_id)
+    else:
+        webbrowser.open('https://trello.com/b/%s' % updater.board_id)
 
 def CLI():
 
@@ -159,6 +167,10 @@ def CLI():
     comment.add_argument('-d', '--move-down', action="store_true", default=False)
     comment.add_argument('-m', '--message', action="store", dest="message", nargs='+', help='inline message to add to card (instead of launching editor', default=[])
     comment.set_defaults(action=add_comment)
+
+    show = subparsers.add_parser('show', help='open card or board in web view')
+    show.add_argument('card', action="store", nargs='*')
+    show.set_defaults(action=show_card_or_board)
 
     board = subparsers.add_parser('board', help='set the active board')
     board.set_defaults(action=lambda args: updater.set_board())
