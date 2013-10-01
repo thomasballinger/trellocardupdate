@@ -28,3 +28,8 @@ Bash Completion
 For now, just completes cards and --flags. Paste this into your bashrc:
 
 `complete -C 'tu --get-bash-completion' tu`
+
+todo
+----
+
+* --amend for comments
