@@ -80,7 +80,7 @@ def get_message_from_external_editor(card_url, card_name, moved_down):
     from_external = external_edit(prompt)
 
     return '\n'.join([line for line in from_external.split('\n')
-                           if ((len(line) > 0 and line[0] != '#'))])
+                           if line[0] != '#'])
 
 subcommands = ['board', 'cards', 'token', 'comment']
 comment_flags = ['-d', '-m', '--message', '--move-down']
