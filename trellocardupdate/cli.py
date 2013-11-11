@@ -82,22 +82,22 @@ def get_message_from_external_editor(card_url, card_name, moved_down):
     return '\n'.join([line for line in from_external.split('\n')
                            if ((len(line) > 0 and line[0] != '#'))])
 
+subcommands = ['board', 'cards', 'token', 'comment']
+comment_flags = ['-d', '-m', '--message', '--move-down']
+token_flags = ['--get', '--generate', '--test']
+
 def getcompletion(args):
-    assert len(args) == 3
+    assert len(args) == 3, [args, sys.argv]
     try:
         first, arg, prevarg = args
     except ValueError:
         raise Exception('Bad completions arguments')
-    subcommands = ['board', 'cards', 'token', 'comment']
-    comment_flags = ['-d', '-m', '--message', '--move-down']
-    token_flags = ['--get', '--generate', '--test']
     if prevarg == first:
         print '\n'.join([x for x in subcommands + ['-h', '--help'] if arg in x])
     elif prevarg in ['board', 'cards']:
         pass
     elif prevarg in ['comment', 'show']:
         cards = updater.cached_card_names_and_ids
-
         match = choose(unicode(arg), [unicode(name) for name, id_ in cards], .98)
         if match:
             print match
@@ -107,7 +107,7 @@ def getcompletion(args):
     elif prevarg == 'token':
         print '\n'.join([x for x in token_flags if arg in x])
     elif prevarg == '-m':
-        print 'TYPE_A_COMMENT_HERE'
+        print '"TYPE A COMMENT HERE"'
     elif prevarg == '-d':
         print '\n'.join(get_card_completions(arg))
     else:
@@ -119,6 +119,45 @@ def getcompletion(args):
                 next_name_part[cur].append(next)
         if prevarg in next_name_part:
             print '\n'.join(suggestion for suggestion in next_name_part[prevarg] if arg.lower() in suggestion.lower())
+        else:
+            pass
+
+#TODO obvious todo: repeated code in completion functions
+def getzshcompletion(unparsed_args):
+    suffix = unparsed_args[-1][5:]
+    prefix = unparsed_args[-2][5:]
+    command = unparsed_args[2]
+    args = unparsed_args[3:-2]
+    if len(args) > 1:
+        prevarg = args[-2] if args[-1] == prefix else args[-1]
+    elif len(args) == 1:
+        prevarg = '' if args[-1] == prefix else args[-1]
+    else:
+        prevarg = ''
+
+    if len(args) == 0 or (len(args) == 1 and args[-1] == prefix):
+        print '\n'.join(x for x in (subcommands + ['-h', '--help']) if x.startswith(prefix))
+    elif prevarg == 'token':
+        print '\n'.join([x for x in token_flags if prefix in x])
+    elif prevarg in ['comment', 'show', '-d', '--move-down']:
+        cards = updater.cached_card_names_and_ids
+        match = choose(unicode(prefix), [unicode(name) for name, id_ in cards], .98)
+        if match:
+            print match
+        else:
+            print '\n'.join(suggestions(unicode(prefix), [unicode(name) for name, id_ in cards]))
+    elif prevarg in ['board', 'cards']:
+        pass
+    else:
+        cards = updater.cached_card_names_and_ids
+        next_name_part = collections.defaultdict(list)
+        for name in [unicode(name) for name, id_ in cards]:
+            nameparts = name.split()
+            for cur, next in zip(nameparts[:-1], nameparts[1:]):
+                next_name_part[cur].append(next)
+                next_name_part[cur.lower()].append(next)
+        if prevarg in next_name_part:
+            print '\n'.join(suggestion for suggestion in next_name_part[prevarg] if prefix.lower() in suggestion.lower())
         else:
             pass
 
@@ -154,6 +193,11 @@ def CLI():
     if '--get-bash-completion' in sys.argv:
         i = sys.argv.index('--get-bash-completion')
         getcompletion(sys.argv[i+1:i+4])
+        sys.exit()
+
+    if '--get-zsh-completion' in sys.argv:
+        i = sys.argv.index('--get-zsh-completion')
+        getzshcompletion(sys.argv)
         sys.exit()
 
 
