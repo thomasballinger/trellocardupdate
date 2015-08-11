@@ -129,7 +129,7 @@ class TrelloUpdater(object):
         """Returns [(name, id), ...] pairs of cards from current board"""
         b = Board(self.client, self.board_id)
         cards = b.getCards()
-        card_names_and_ids = [(unidecode(c.name.decode('utf8')), c.id) for c in cards]
+        card_names_and_ids = [(unidecode(c.name), c.id) for c in cards]
         return card_names_and_ids
 
     @property

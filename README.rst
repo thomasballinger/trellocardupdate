@@ -20,7 +20,7 @@ Current Features:
 
 -  ability to add comments to cards
 -  fuzzy matching on card name
--  single board at a time, which is persitantly set
+-  single board at a time, which is persitently set
 
 Bash Completion
 ---------------

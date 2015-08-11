@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import sys
+import re
 import collections
 import webbrowser
 from operator import itemgetter
@@ -79,8 +80,12 @@ def get_message_from_external_editor(card_url, card_name, moved_down):
 
     from_external = external_edit(prompt)
 
-    return '\n'.join([line for line in from_external.split('\n')
-                           if line[0] != '#'])
+    s = '\n'.join([line for line in from_external.split('\n')
+                           if line and line[0] != '#'])
+    #no_single_space = re.sub(r'([^\n])(\n)([^\n])',
+    #                         lambda m: m.group(1) + ' ' + m.group(3), s)
+    #return no_single_space
+    return s
 
 subcommands = ['board', 'cards', 'token', 'comment']
 comment_flags = ['-d', '-m', '--message', '--move-down']
